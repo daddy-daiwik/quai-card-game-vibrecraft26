@@ -178,9 +178,23 @@ contract CardGame {
         p.deck.pop();
         teamCards[p.team]--; 
 
+        // Check Win Condition: Fatigue / Total Domination
+        // 1. If opponent has 0 cards...
         if (teamCards[opponentTeam] == 0) {
-            finishGame(p.team); 
-            return;
+            // 2. AND I have cards left -> I win (Mercy Rule, I can keep hitting them indefinitely)
+            if (teamCards[p.team] > 0) {
+                finishGame(p.team);
+                return;
+            }
+            // 3. AND I also have 0 cards (Both Exhausted) -> Compare HP
+            else {
+                if (teamHP[p.team] >= teamHP[opponentTeam]) {
+                    finishGame(p.team); // I have more or equal HP -> I win
+                } else {
+                    finishGame(opponentTeam); // Opponent has more HP -> They win
+                }
+                return;
+            }
         }
 
         currentTeamTurn = opponentTeam;
