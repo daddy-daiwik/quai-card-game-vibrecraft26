@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { quais, BrowserProvider, Contract } from 'quais';
 import { parseEther, formatEther } from 'ethers';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from './constants';
-import { Sword, Users, Zap, RefreshCw, ShieldAlert, Skull, Coins, Award } from 'lucide-react';
+import { Sword, Users, Zap, RefreshCw, ShieldAlert, Skull, Coins, Award, Play } from 'lucide-react';
 
 // Team Constants
 const TEAM_RED = 1;
@@ -13,7 +13,7 @@ const Card = ({ id, attack, onClick, disabled }) => (
     onClick={() => !disabled && onClick && onClick(id)}
     className={`relative w-36 h-56 rounded-xl border-4 transition-all duration-300 transform 
       ${disabled ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:scale-105 cursor-pointer bg-slate-800 border-slate-600 hover:border-yellow-400 shadow-xl hover:shadow-yellow-500/20'}
-      flex flex-col items-center justify-between p-4 overflow-hidden group`}
+      flex flex-col items-center justify-between p-4 overflow-hidden group shrink-0`}
   >
     <div className="absolute top-0 right-0 p-2 text-xs font-mono text-slate-500">#{id}</div>
 
@@ -162,6 +162,20 @@ function App() {
     }
   };
 
+  const beginGame = async () => {
+    if (!contract) return;
+    setLoading(true);
+    try {
+      const tx = await contract.beginGame({ gasLimit: 8000000 }); // High Limit for loop
+      await tx.wait();
+      fetchGameState(contract);
+    } catch (err) {
+      setError(err.reason || err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const playCard = async (index) => {
     if (!contract) return;
     setLoading(true);
@@ -195,6 +209,11 @@ function App() {
   const isBlueTurn = gameState.turn === TEAM_BLUE;
   const isMyTurn = (myTeam === TEAM_RED && isRedTurn) || (myTeam === TEAM_BLUE && isBlueTurn);
   const isMyTeamWinner = myTeam === gameState.winner;
+
+  // Render logic for Waiting Room
+  const showLobby = account && myTeam === 0 && !gameState.winner && !gameState.active;
+  const showWaitingRoom = account && myTeam !== 0 && !gameState.active && !gameState.winner;
+  const showGame = account && gameState.active;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-game selection:bg-yellow-500/30">
@@ -280,13 +299,12 @@ function App() {
         )}
 
         {/* 2. Lobby (Join Team) */}
-        {account && myTeam === 0 && !gameState.winner && (
+        {showLobby && (
           <div className="grid md:grid-cols-2 gap-8 py-12">
             {/* Red Team */}
             <div className="bg-red-950/30 border-2 border-red-900/50 rounded-2xl p-8 flex flex-col items-center hover:bg-red-900/40 transition-colors group">
               <h3 className="text-3xl font-black text-red-500 mb-2">RED TEAM</h3>
-              <p className="text-red-300 mb-1">{gameState.count1} Players Joined</p>
-              <p className="text-red-400/60 mb-6 text-sm uppercase tracking-wider">{gameState.cards1} cards in arsenal</p>
+              <p className="text-red-300 mb-6">{gameState.count1} Players Joined</p>
               <div className="mb-6 flex items-center space-x-2 bg-black/40 px-4 py-2 rounded-lg border border-red-500/30">
                 <Coins size={16} className="text-yellow-500" />
                 <span className="text-red-200 font-bold">0.0067 QUAI</span>
@@ -303,8 +321,7 @@ function App() {
             {/* Blue Team */}
             <div className="bg-blue-950/30 border-2 border-blue-900/50 rounded-2xl p-8 flex flex-col items-center hover:bg-blue-900/40 transition-colors group">
               <h3 className="text-3xl font-black text-blue-500 mb-2">BLUE TEAM</h3>
-              <p className="text-blue-300 mb-1">{gameState.count2} Players Joined</p>
-              <p className="text-blue-400/60 mb-6 text-sm uppercase tracking-wider">{gameState.cards2} cards in arsenal</p>
+              <p className="text-blue-300 mb-6">{gameState.count2} Players Joined</p>
               <div className="mb-6 flex items-center space-x-2 bg-black/40 px-4 py-2 rounded-lg border border-blue-500/30">
                 <Coins size={16} className="text-yellow-500" />
                 <span className="text-blue-200 font-bold">0.0067 QUAI</span>
@@ -320,8 +337,44 @@ function App() {
           </div>
         )}
 
+        {/* Waiting Room (Joined but not Started) */}
+        {showWaitingRoom && (
+          <div className="flex flex-col items-center justify-center py-20 animate-in fade-in duration-700">
+            <h2 className="text-3xl font-bold text-yellow-400 mb-2">LOBBY</h2>
+            <p className="text-slate-400 mb-12">Waiting for players to assemble...</p>
+
+            <div className="flex justify-center space-x-12 mb-12">
+              <div className="text-center">
+                <div className="text-5xl font-black text-red-500 mb-2">{gameState.count1}</div>
+                <div className="text-sm uppercase tracking-widest text-red-300">Red Team</div>
+              </div>
+              <div className="text-center">
+                <div className="text-5xl font-black text-slate-700 mb-2">VS</div>
+              </div>
+              <div className="text-center">
+                <div className="text-5xl font-black text-blue-500 mb-2">{gameState.count2}</div>
+                <div className="text-sm uppercase tracking-widest text-blue-300">Blue Team</div>
+              </div>
+            </div>
+
+            {gameState.count1 > 0 && gameState.count2 > 0 ? (
+              <button
+                onClick={beginGame}
+                disabled={loading}
+                className="px-10 py-5 bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-black text-2xl rounded-2xl shadow-[0_0_40px_rgba(234,179,8,0.4)] hover:scale-105 transition-all flex items-center"
+              >
+                <Play size={28} className="mr-3 fill-current" /> START WAR
+              </button>
+            ) : (
+              <div className="px-6 py-3 bg-slate-800 rounded-lg text-slate-500 font-mono">
+                Waiting for opponents on both sides...
+              </div>
+            )}
+          </div>
+        )}
+
         {/* 3. Game Board */}
-        {account && (myTeam !== 0 || gameState.active) && (
+        {showGame && (
           <div className="space-y-12">
 
             {/* Scoreboard */}
@@ -348,39 +401,31 @@ function App() {
 
             {/* Turn Indicator / Game Message */}
             <div className="text-center">
-              {gameState.winner > 0 ? (
-                <div className="animate-bounce">
-                  <h2 className={`text-6xl font-black ${gameState.winner === TEAM_RED ? 'text-red-500' : 'text-blue-500'}`}>
-                    {gameState.winner === TEAM_RED ? 'RED TEAM WINS!' : 'BLUE TEAM WINS!'}
-                  </h2>
+              <div>
+                <div className={`inline-block px-8 py-2 rounded-full text-xl font-bold border-2 ${isRedTurn ? 'bg-red-500/20 border-red-500 text-red-500' : 'bg-blue-500/20 border-blue-500 text-blue-500'
+                  }`}>
+                  {isRedTurn ? "RED TEAM'S TURN" : "BLUE TEAM'S TURN"}
                 </div>
-              ) : (
-                <div>
-                  <div className={`inline-block px-8 py-2 rounded-full text-xl font-bold border-2 ${isRedTurn ? 'bg-red-500/20 border-red-500 text-red-500' : 'bg-blue-500/20 border-blue-500 text-blue-500'
-                    }`}>
-                    {isRedTurn ? "RED TEAM'S TURN" : "BLUE TEAM'S TURN"}
-                  </div>
 
-                  {myTeam !== 0 && (
-                    <p className="mt-4 text-slate-400">
-                      You are on <span className={myTeam === TEAM_RED ? 'text-red-500 font-bold' : 'text-blue-500 font-bold'}>
-                        {myTeam === TEAM_RED ? 'TEAM RED' : 'TEAM BLUE'}
-                      </span>
-                    </p>
-                  )}
-                </div>
-              )}
+                {myTeam !== 0 && (
+                  <p className="mt-4 text-slate-400">
+                    You are on <span className={myTeam === TEAM_RED ? 'text-red-500 font-bold' : 'text-blue-500 font-bold'}>
+                      {myTeam === TEAM_RED ? 'TEAM RED' : 'TEAM BLUE'}
+                    </span>
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* My Hand */}
-            {myTeam !== 0 && !gameState.winner && (
+            {myTeam !== 0 && (
               <div className="bg-slate-900/50 p-8 rounded-3xl border border-slate-700/50">
                 <h3 className="text-center text-slate-500 mb-8 uppercase tracking-widest font-bold">Your Arsenal</h3>
 
                 {myDeck.length === 0 ? (
                   <div className="text-center text-slate-600 italic">You have no cards left. Cheer for your team!</div>
                 ) : (
-                  <div className="flex flex-wrap justify-center gap-6">
+                  <div className="flex flex-wrap justify-center gap-6 max-h-[600px] overflow-y-auto p-4 fancy-scrollbar">
                     {myDeck.map(card => (
                       <Card
                         key={card.index}
