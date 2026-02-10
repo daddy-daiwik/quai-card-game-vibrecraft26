@@ -61,17 +61,29 @@ contract CardGame {
     }
 
     function createGame() public returns (uint) {
-        uint id = nextGameId;
+        uint id = _generateRandomId();
+        // Simple collision check (rare for 7 digits with low volume, but good practice)
+        // If collision, try once more with different seed
+        if (games[id].id != 0) {
+            id = _generateRandomId();
+        }
+        require(games[id].id == 0, "Game ID collision, try again");
+
         Game storage g = games[id];
         g.id = id;
         g.ap1 = 0;
         g.ap2 = 0;
         g.currentTurn = 1;
-        g.active = false; // Waiting for start
+        g.active = false; 
         
-        nextGameId++;
         emit GameCreated(id, msg.sender);
         return id;
+    }
+
+    function _generateRandomId() internal view returns (uint) {
+        // Generate random 7-digit number (1000000 - 9999999)
+        uint hash = uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, block.difficulty)));
+        return (hash % 9000000) + 1000000;
     }
 
     function joinTeam(uint _gameId, uint _teamId) public payable {
@@ -221,7 +233,8 @@ contract CardGame {
         if (winnerCount > 0 && totalPool > 0) {
             uint256 share = totalPool / winnerCount;
             for (uint i = 0; i < winnerCount; i++) {
-                payable(winners[i]).transfer(share);
+                (bool success, ) = winners[i].call{value: share}("");
+                require(success, "Transfer failed");
                 emit PayoutSent(_gameId, winners[i], share);
             }
         }

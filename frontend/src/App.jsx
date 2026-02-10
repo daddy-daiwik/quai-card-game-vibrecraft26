@@ -300,7 +300,7 @@ function App() {
                     <div className="flex w-full gap-4">
                         <input 
                             type="number" 
-                            placeholder="ZONE ID" 
+                            placeholder="ENTER 7-DIGIT CODE" 
                             value={gameIdInput}
                             onChange={(e) => setGameIdInput(e.target.value)}
                             className="flex-1 bg-black border border-slate-700 focus:border-blue-500 px-6 py-4 text-white font-mono placeholder:text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
@@ -406,9 +406,8 @@ function App() {
                             <div className="absolute right-0 top-0 bottom-0 w-1 bg-white animate-pulse shadow-[0_0_10px_white]"></div>
                          </div>
                      </div>
-                     <div className="mt-2 flex justify-between text-xs font-mono text-slate-500">
+                     <div className="mt-2 text-xs font-mono text-slate-500">
                         <span>CARDS: {gameState.cards1}</span>
-                        <span>TARGET: 100</span>
                      </div>
                  </div>
 
@@ -429,8 +428,7 @@ function App() {
                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-white animate-pulse shadow-[0_0_10px_white]"></div>
                          </div>
                      </div>
-                     <div className="mt-2 flex justify-between text-xs font-mono text-slate-500">
-                        <span>TARGET: 100</span>
+                     <div className="mt-2 text-right text-xs font-mono text-slate-500">
                         <span>CARDS: {gameState.cards2}</span>
                      </div>
                  </div>
@@ -487,7 +485,7 @@ function App() {
         {/* HAND */}
         {gameState.active && myTeam !== 0 && (
           <div className="mt-12">
-            <h3 className="text-center text-slate-600 font-mono text-xs uppercase tracking-[0.5em] mb-8">Deploy Weapons</h3>
+            <h3 className="text-center text-slate-600 font-mono text-xs uppercase tracking-[0.5em] mb-8">Your Cards</h3>
             
             <div className="flex flex-wrap justify-center gap-6">
                 {myDeck.map(card => (
@@ -500,11 +498,7 @@ function App() {
                 ))}
             </div>
 
-            {!isMyTurn && (
-               <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-black px-6 py-3 border border-slate-700 text-slate-400 font-mono text-sm uppercase tracking-widest animate-pulse shadow-2xl">
-                  Enemy Maneuvers Detected...
-               </div>
-            )}
+
           </div>
         )}
 
