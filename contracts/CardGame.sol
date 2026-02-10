@@ -15,8 +15,8 @@ contract CardGame {
     struct Game {
         bool active;
         uint winner;
-        uint hp1;
-        uint hp2;
+        uint ap1; // Annihilation Points (Target: 100)
+        uint ap2;
         uint size1;
         uint size2;
         uint cards1;
@@ -28,7 +28,7 @@ contract CardGame {
 
     // Config
     mapping(uint => Card) public cards;
-    uint public constant MAX_HP = 100;
+    uint public constant TARGET_SCORE = 100;
     uint256 public constant ENTRY_FEE = 0.0067 ether; 
     
     // State
@@ -64,8 +64,8 @@ contract CardGame {
         uint id = nextGameId;
         Game storage g = games[id];
         g.id = id;
-        g.hp1 = MAX_HP;
-        g.hp2 = MAX_HP;
+        g.ap1 = 0;
+        g.ap2 = 0;
         g.currentTurn = 1;
         g.active = false; // Waiting for start
         
@@ -121,10 +121,10 @@ contract CardGame {
         g.cards1 = totalTeamCards;
         g.cards2 = totalTeamCards;
 
-        // g.hp1/hp2 are already set in createGame or reset (if we had reset)
+        // g.ap1/ap2 are already set in createGame or reset
         // Ensure they are fresh just in case
-        g.hp1 = MAX_HP;
-        g.hp2 = MAX_HP;
+        g.ap1 = 0;
+        g.ap2 = 0;
         g.currentTurn = 1; 
         g.active = true;
 
@@ -156,22 +156,26 @@ contract CardGame {
         require(p.team == g.currentTurn, "Not your team's turn");
         require(index < p.deck.length, "Invalid card index");
 
+        // Damage Logic (Renamed HP to AP - Annihilation Points)
         uint cardId = p.deck[index];
         uint damage = cards[cardId].attack;
-
         uint opponentTeam = (p.team == 1) ? 2 : 1;
-        
-        // Damage Logic
-        uint currentOppHP = (opponentTeam == 1) ? g.hp1 : g.hp2;
-        
-        if (currentOppHP <= damage) {
-            if(opponentTeam == 1) g.hp1 = 0; else g.hp2 = 0;
-            finishGame(_gameId, p.team);
-            return;
-        } else {
-            if(opponentTeam == 1) g.hp1 -= damage; else g.hp2 -= damage;
-        }
 
+        // We add damage to OUR team's score. First to 100 wins.
+        if (p.team == 1) {
+            g.ap1 += damage;
+            if (g.ap1 >= TARGET_SCORE) { 
+                finishGame(_gameId, 1);
+                return;
+            }
+        } else {
+            g.ap2 += damage;
+            if (g.ap2 >= TARGET_SCORE) {
+                finishGame(_gameId, 2);
+                return;
+            }
+        }
+        
         emit CardPlayed(_gameId, msg.sender, p.team, cardId, damage);
 
         // Remove Card
@@ -183,20 +187,19 @@ contract CardGame {
         uint oppCards = (opponentTeam == 1) ? g.cards1 : g.cards2;
         uint myCards = (p.team == 1) ? g.cards1 : g.cards2;
 
-        // Check Win Condition: Fatigue / Total Domination
+        // Check Win Condition: Fatigue / Total Domination (Mercy Rule)
         if (oppCards == 0) {
-            // Mercy Rule
             if (myCards > 0) {
                 finishGame(_gameId, p.team);
                 return;
             }
-            // Both Exhausted -> Compare HP
+            // Both Exhausted -> Compare AP (Higher Score Wins)
             else {
                 if(p.team == 1) {
-                     if (g.hp1 >= g.hp2) finishGame(_gameId, 1);
+                     if (g.ap1 >= g.ap2) finishGame(_gameId, 1);
                      else finishGame(_gameId, 2);
                 } else {
-                     if (g.hp2 >= g.hp1) finishGame(_gameId, 2);
+                     if (g.ap2 >= g.ap1) finishGame(_gameId, 2);
                      else finishGame(_gameId, 1);
                 }
                 return;
@@ -240,8 +243,8 @@ contract CardGame {
         bool active,
         uint turn,
         uint winner,
-        uint hp1,
-        uint hp2,
+        uint ap1,
+        uint ap2,
         uint count1,
         uint count2,
         uint cards1,
@@ -254,8 +257,8 @@ contract CardGame {
             g.active,
             g.currentTurn,
             g.winner,
-            g.hp1,
-            g.hp2,
+            g.ap1,
+            g.ap2,
             g.size1,
             g.size2,
             g.cards1,
