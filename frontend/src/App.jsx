@@ -475,7 +475,7 @@ function App() {
                     </div>
                     <div className="mb-12 inline-flex flex-col items-center space-y-2 px-8 py-4 bg-yellow-500/20 border border-yellow-500 text-yellow-400 rounded-xl animate-pulse">
                         <Coins size={40} />
-                        <span className="font-bold font-mono text-2xl">POT SPLIT</span>
+                        <span className="font-bold font-mono text-2xl">POT SPLIT: +32 CR</span>
                     </div>
                 </>
             ) : (
