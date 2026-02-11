@@ -214,7 +214,7 @@ contract CardGame {
             // CRIT.EXE (20% Double Dmg)
             require(p.critChance == 0, "Crit module already installed");
             _deductCredits(msg.sender, COST_CRIT);
-            p.critChance = 20;
+            p.critChance = 50;
             emit AbilityPurchased(_gameId, msg.sender, "CRIT_EXE");
         }
         else if (_abilityId == 4) {

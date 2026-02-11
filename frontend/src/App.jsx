@@ -582,7 +582,7 @@ function App() {
               )}
               {playerState.critChance > 0 && (
                   <div className="flex items-center text-red-500 font-bold font-mono text-sm">
-                      <Crosshair size={16} className="mr-2"/> CRIT.EXE ACTIVE (20% CRIT)
+                      <Crosshair size={16} className="mr-2"/> CRIT.EXE ACTIVE (50% CRIT)
                   </div>
               )}
           </div>
@@ -725,7 +725,7 @@ function App() {
                              <span className="text-xs font-mono font-bold text-red-500">125 CR</span>
                         </div>
                         <div className="font-bold text-white mb-1">CRIT.EXE</div>
-                        <div className="text-xs text-slate-400">20% Chance 2x</div>
+                        <div className="text-xs text-slate-400">50% Chance 2x</div>
                     </button>
                     
                     {/* Item 4 */}
