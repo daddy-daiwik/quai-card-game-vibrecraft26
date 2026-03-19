@@ -71,6 +71,7 @@ function App() {
   const [myTeam, setMyTeam] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [customAlert, setCustomAlert] = useState(null);
 
   const [currentGameId, setCurrentGameId] = useState(null);
   const [gameIdInput, setGameIdInput] = useState('');
@@ -157,12 +158,24 @@ function App() {
         }
       }
       if (newGameId) {
-        setCurrentGameId(newGameId);
         navigator.clipboard.writeText(newGameId.toString());
-        alert(`Game Created: ${newGameId}\nCOPIED TO CLIPBOARD!`);
-        fetchGameState(contract, account, newGameId);
+        setCustomAlert({
+            title: "SYSTEM ALERT",
+            message: `Game Created: ${newGameId}\nCOPIED TO CLIPBOARD!`,
+            onConfirm: () => {
+                setCustomAlert(null);
+                setCurrentGameId(newGameId);
+                fetchGameState(contract, account, newGameId);
+            }
+        });
       } else {
-        alert("Game Created. Check explorer for ID.");
+        setCustomAlert({
+            title: "SYSTEM ALERT",
+            message: "Game Created. Check explorer for ID.",
+            onConfirm: () => {
+                setCustomAlert(null);
+            }
+        });
       }
     } catch (err) {
       setError(err.reason || err.message);
@@ -441,6 +454,25 @@ function App() {
           </div>
         </div>
         {error && <div className="mt-12 text-center font-mono text-red-500 max-w-xl mx-auto border-b border-red-500 pb-2">{error}</div>}
+
+        {/* CUSTOM ALERT MODAL */}
+        {customAlert && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-slate-950 border-2 border-slate-800 p-8 shadow-[0_0_50px_rgba(0,0,0,0.8)] max-w-sm w-full text-center relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-yellow-500 to-blue-500"></div>
+                <h3 className="text-xl font-black italic tracking-widest text-white mb-4 uppercase">{customAlert.title}</h3>
+                <p className="text-slate-400 font-mono mb-8 whitespace-pre-line text-sm leading-relaxed">{customAlert.message}</p>
+                <div className="flex justify-center">
+                    <button 
+                       onClick={customAlert.onConfirm}
+                       className="px-10 py-3 bg-red-600 hover:bg-red-500 text-white font-black skew-x-[-6deg] transition-all hover:shadow-[0_0_20px_rgba(220,38,38,0.4)]"
+                    >
+                       <span className="skew-x-[6deg] block">OK</span>
+                    </button>
+                </div>
+            </div>
+          </div>
+        )}
       </div>
     )
   }
