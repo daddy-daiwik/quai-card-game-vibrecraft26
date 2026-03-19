@@ -160,8 +160,9 @@ function App() {
       if (newGameId) {
         navigator.clipboard.writeText(newGameId.toString());
         setCustomAlert({
-            title: "SYSTEM ALERT",
-            message: `Game Created: ${newGameId}\nCOPIED TO CLIPBOARD!`,
+            title: "LOBBY DEPLOYED",
+            message: `Combat Code: ${newGameId}\nCOPIED TO CLIPBOARD ✔`,
+            type: "success",
             onConfirm: () => {
                 setCustomAlert(null);
                 setCurrentGameId(newGameId);
@@ -170,8 +171,9 @@ function App() {
         });
       } else {
         setCustomAlert({
-            title: "SYSTEM ALERT",
+            title: "DEPLOYMENT STATUS",
             message: "Game Created. Check explorer for ID.",
+            type: "success",
             onConfirm: () => {
                 setCustomAlert(null);
             }
@@ -458,16 +460,20 @@ function App() {
         {/* CUSTOM ALERT MODAL */}
         {customAlert && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in zoom-in-95 duration-200">
-            <div className="bg-slate-950 border-2 border-slate-800 p-8 shadow-[0_0_50px_rgba(0,0,0,0.8)] max-w-sm w-full text-center relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-yellow-500 to-blue-500"></div>
-                <h3 className="text-xl font-black italic tracking-widest text-white mb-4 uppercase">{customAlert.title}</h3>
-                <p className="text-slate-400 font-mono mb-8 whitespace-pre-line text-sm leading-relaxed">{customAlert.message}</p>
+            <div className={`bg-slate-950 border-2 p-8 text-center relative overflow-hidden group max-w-sm w-full shadow-[0_0_50px_rgba(0,0,0,0.8)] ${customAlert.type === 'success' ? 'border-emerald-900/50' : 'border-slate-800'}`}>
+                {customAlert.type === 'success' ? (
+                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500"></div>
+                ) : (
+                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-yellow-500 to-blue-500"></div>
+                )}
+                <h3 className={`text-xl font-black italic tracking-widest uppercase mb-4 ${customAlert.type === 'success' ? 'text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.5)]' : 'text-white'}`}>{customAlert.title}</h3>
+                <p className="text-slate-300 font-mono mb-8 whitespace-pre-line text-sm leading-relaxed">{customAlert.message}</p>
                 <div className="flex justify-center">
                     <button 
                        onClick={customAlert.onConfirm}
-                       className="px-10 py-3 bg-red-600 hover:bg-red-500 text-white font-black skew-x-[-6deg] transition-all hover:shadow-[0_0_20px_rgba(220,38,38,0.4)]"
+                       className={`px-10 py-3 text-black font-black skew-x-[-6deg] transition-all ${customAlert.type === 'success' ? 'bg-emerald-500 hover:bg-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.5)]' : 'bg-red-600 text-white hover:bg-red-500 hover:shadow-[0_0_20px_rgba(220,38,38,0.4)]'}`}
                     >
-                       <span className="skew-x-[6deg] block">OK</span>
+                       <span className="skew-x-[6deg] block tracking-widest">{customAlert.type === 'success' ? 'PROCEED' : 'OK'}</span>
                     </button>
                 </div>
             </div>
